@@ -67,7 +67,9 @@
     <form id="synthesize-form"
           hx-post="/api/synthesize"
           hx-target="#synthesize-result"
-          hx-swap="innerHTML">
+          hx-swap="innerHTML"
+          hx-indicator="button[type='submit']"
+          hx-disabled-elt="button[type='submit']">
         <div class="synth-controls">
             <textarea id="synth-text" name="text" placeholder="输入要合成的文本..." rows="2"
                       style="width:100%;padding:0.5rem;border-radius:0.375rem;border:1px solid var(--border);background:var(--bg);color:var(--text);font-size:0.9rem;resize:vertical;"
