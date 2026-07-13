@@ -1,0 +1,41 @@
+<!-- 服务状态卡片 -->
+<div class="card services-card" style="margin-bottom: 1.5rem;">
+    <h2>应用服务</h2>
+    <table class="services-table">
+        <thead>
+            <tr>
+                <th>服务</th>
+                <th>状态</th>
+                <th>运行时长</th>
+                <th>操作</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for svc in services %}
+            <tr>
+                <td>{{ svc.name }}</td>
+                <td><span class="badge badge-{{ 'active' if svc.active else 'inactive' }}">{{ svc.status }}</span></td>
+                <td>{{ svc.uptime or '-' }}</td>
+                <td class="actions" id="acts-{{ svc.name }}">
+                    <button hx-post="/api/services/{{ svc.name }}/start"
+                            hx-target="#services-panel"
+                            hx-swap="innerHTML"
+                            hx-disabled-elt="#acts-{{ svc.name }} button"
+                            {% if svc.active %}disabled{% endif %}>启动</button>
+                    <button class="danger"
+                            hx-post="/api/services/{{ svc.name }}/stop"
+                            hx-target="#services-panel"
+                            hx-swap="innerHTML"
+                            hx-disabled-elt="#acts-{{ svc.name }} button"
+                            {% if not svc.active %}disabled{% endif %}>停止</button>
+                    <button hx-post="/api/services/{{ svc.name }}/restart"
+                            hx-target="#services-panel"
+                            hx-swap="innerHTML"
+                            hx-disabled-elt="#acts-{{ svc.name }} button"
+                            {% if not svc.active %}disabled{% endif %}>重启</button>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>

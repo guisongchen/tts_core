@@ -62,7 +62,7 @@ def index(request: Request):
         request,
         "index.html",
         {"tts": _tts_status(), "stats": _tts_stats(), "services": _services(),
-         "models": MODEL_CHOICES, "speakers": SPEAKERS},
+         "models": MODEL_CHOICES, "speakers": SPEAKERS, "htmx": False},
     )
 
 
@@ -119,19 +119,19 @@ def api_synthesize(
 @app.post("/api/services/{name}/start", response_class=HTMLResponse)
 def api_service_start(request: Request, name: str):
     systemd.start(name)
-    return partial_status(request)
+    return _render_services(request)
 
 
 @app.post("/api/services/{name}/stop", response_class=HTMLResponse)
 def api_service_stop(request: Request, name: str):
     systemd.stop(name)
-    return partial_status(request)
+    return _render_services(request)
 
 
 @app.post("/api/services/{name}/restart", response_class=HTMLResponse)
 def api_service_restart(request: Request, name: str):
     systemd.restart(name)
-    return partial_status(request)
+    return _render_services(request)
 
 
 @app.get("/api/services/{name}/logs")
@@ -162,7 +162,21 @@ def partial_status(request: Request):
         request,
         "partials/status.html",
         {"tts": _tts_status(), "stats": _tts_stats(), "services": _services(),
-         "models": MODEL_CHOICES, "speakers": SPEAKERS},
+         "models": MODEL_CHOICES, "speakers": SPEAKERS,
+         "htmx": request.headers.get("HX-Request") == "true"},
+    )
+
+
+@app.get("/partials/services", response_class=HTMLResponse)
+def partial_services(request: Request):
+    return _render_services(request)
+
+
+def _render_services(request: Request):
+    return templates.TemplateResponse(
+        request,
+        "partials/services.html",
+        {"services": _services()},
     )
 
 

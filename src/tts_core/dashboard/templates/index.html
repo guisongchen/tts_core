@@ -6,8 +6,10 @@
     {% include "partials/status.html" %}
 </section>
 
-<section id="synthesize-panel">
-    <div id="synthesize-result" style="margin-top:1rem;"></div>
+{% include "partials/synthesize.html" %}
+
+<section id="services-panel" hx-get="/partials/services" hx-trigger="load, refresh-status from:body">
+    {% include "partials/services.html" %}
 </section>
 
 <section class="logs-section">

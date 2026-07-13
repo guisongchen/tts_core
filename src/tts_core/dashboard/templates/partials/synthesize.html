@@ -1,0 +1,33 @@
+<!-- 语音合成测试 -->
+<div class="card synthesize-card" style="margin-bottom: 1.5rem;">
+    <h2>语音合成测试</h2>
+    <form id="synthesize-form"
+          hx-post="/api/synthesize"
+          hx-target="#synthesize-result"
+          hx-swap="innerHTML"
+          hx-indicator="button[type='submit']"
+          hx-disabled-elt="button[type='submit']">
+        <div class="synth-controls">
+            <textarea id="synth-text" name="text" placeholder="输入要合成的文本..." rows="2"
+                      style="width:100%;padding:0.5rem;border-radius:0.375rem;border:1px solid var(--border);background:var(--bg);color:var(--text);font-size:0.9rem;resize:vertical;"
+                      required hx-preserve>你好世界</textarea>
+            <div class="synth-params">
+                <select id="synth-lang" name="language" hx-preserve>
+                    <option value="Chinese">中文</option>
+                    <option value="English">English</option>
+                    <option value="Japanese">日本語</option>
+                    <option value="Korean">한국어</option>
+                </select>
+                <select id="synth-speaker" name="speaker" hx-preserve>
+                    {% for s in speakers %}
+                    <option value="{{ s }}">{{ s }}</option>
+                    {% endfor %}
+                </select>
+                <input id="synth-instruct" type="text" name="instruct" placeholder="风格指令 (可选)" hx-preserve
+                       style="flex:1;min-width:150px;padding:0.5rem;border-radius:0.375rem;border:1px solid var(--border);background:var(--bg);color:var(--text);font-size:0.9rem;">
+                <button type="submit" id="synth-submit" {% if tts.state != "loaded" %}disabled{% endif %}>合成</button>
+            </div>
+        </div>
+    </form>
+    <div id="synthesize-result" style="margin-top:1rem;"></div>
+</div>
