@@ -10,7 +10,8 @@ from ..client import TTSCoreClient
 from ..config import MODEL_CHOICES, SOCKET_PATH
 from .systemd import SystemdManager
 
-SPEAKERS = ["Vivian", "Serena", "Uncle_Fu"]
+SPEAKERS = ["Serena", "Vivian", "Uncle_Fu"]
+DEFAULT_SPEAKER = "Serena"
 
 app = FastAPI(title="TTSCore Dashboard")
 
@@ -62,7 +63,7 @@ def index(request: Request):
         request,
         "index.html",
         {"tts": _tts_status(), "stats": _tts_stats(), "services": _services(),
-         "models": MODEL_CHOICES, "speakers": SPEAKERS, "htmx": False},
+         "models": MODEL_CHOICES, "speakers": SPEAKERS, "default_speaker": DEFAULT_SPEAKER, "htmx": False},
     )
 
 
@@ -98,7 +99,7 @@ def api_synthesize(
     request: Request,
     text: str = Form(...),
     language: str = Form("Chinese"),
-    speaker: str = Form("Vivian"),
+    speaker: str = Form(DEFAULT_SPEAKER),
     instruct: str = Form(""),
 ):
     try:
@@ -162,7 +163,7 @@ def partial_status(request: Request):
         request,
         "partials/status.html",
         {"tts": _tts_status(), "stats": _tts_stats(), "services": _services(),
-         "models": MODEL_CHOICES, "speakers": SPEAKERS,
+         "models": MODEL_CHOICES, "speakers": SPEAKERS, "default_speaker": DEFAULT_SPEAKER,
          "htmx": request.headers.get("HX-Request") == "true"},
     )
 

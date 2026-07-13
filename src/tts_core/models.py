@@ -20,7 +20,7 @@ class SynthesizeRequest(BaseModel):
     text: str
     model_name: Optional[str] = None
     language: Optional[str] = None
-    speaker: Optional[str] = None
+    speaker: Optional[str] = "Serena"
     instruct: Optional[str] = None
 
 

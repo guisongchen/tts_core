@@ -20,7 +20,7 @@
                 </select>
                 <select id="synth-speaker" name="speaker" hx-preserve>
                     {% for s in speakers %}
-                    <option value="{{ s }}">{{ s }}</option>
+                    <option value="{{ s }}"{% if s == default_speaker %} selected{% endif %}>{{ s }}</option>
                     {% endfor %}
                 </select>
                 <input id="synth-instruct" type="text" name="instruct" placeholder="风格指令 (可选)" hx-preserve
