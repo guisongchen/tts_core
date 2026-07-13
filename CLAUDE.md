@@ -23,7 +23,8 @@ tts_core/
 │       ├── static/    # HTMX, CSS, favicon
 │       └── templates/ # Jinja2 templates with HTMX partials
 ├── services/
-│   └── tts-core.service
+│   ├── tts-core.service
+│   └── tts-core-dashboard.service
 ├── tts_core.toml      # Runtime model configuration
 └── models/            # local model directories or symlinks (gitignored)
 ```
@@ -55,7 +56,11 @@ The project expects Python 3.10+ and a CUDA-capable GPU for model inference.
 ### Via systemd
 
 ```bash
+# TTSCore daemon
 systemctl --user enable --now $PWD/services/tts-core.service
+
+# Web dashboard
+systemctl --user enable --now $PWD/services/tts-core-dashboard.service
 ```
 
 ### Dashboard
@@ -63,6 +68,12 @@ systemctl --user enable --now $PWD/services/tts-core.service
 ```bash
 .venv/bin/python3 -m tts_core.dashboard
 # http://127.0.0.1:8126
+```
+
+To start the dashboard automatically on login/boot:
+
+```bash
+systemctl --user enable --now $PWD/services/tts-core-dashboard.service
 ```
 
 Socket path: `/tmp/tts_core.sock`

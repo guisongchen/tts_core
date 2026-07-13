@@ -25,7 +25,11 @@ curl --noproxy '*' --unix-socket /tmp/tts_core.sock -X POST -H "Content-Type: ap
 ## systemd
 
 ```bash
+# TTSCore daemon
 systemctl --user enable --now $PWD/services/tts-core.service
+
+# Web dashboard
+systemctl --user enable --now $PWD/services/tts-core-dashboard.service
 ```
 
 ## Dashboard
@@ -36,6 +40,8 @@ TTSCore includes a web dashboard for monitoring model status, GPU memory, reques
 python -m tts_core.dashboard
 # Opens at http://127.0.0.1:8126
 ```
+
+To start the dashboard automatically on login/boot, use the `tts-core-dashboard.service` unit shown above.
 
 Features:
 - Model load/unload with real-time status and GPU memory display
