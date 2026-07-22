@@ -1,6 +1,6 @@
 [project]
 name = "tts-core"
-version = "1.0.0"
+version = "1.1.0"
 description = "Shared TTS model service with HTTP-over-Unix-socket API"
 requires-python = ">=3.10"
 dependencies = [
@@ -14,7 +14,6 @@ server = [
     "fastapi>=0.110.0",
     "uvicorn>=0.27.0",
     "qwen-tts>=0.1.0",
-    "jinja2>=3.0.0",
     "torch>=2.0.0",
     "torchaudio>=2.0.0",
     "soundfile>=0.12.0",
@@ -24,7 +23,6 @@ server = [
 
 [project.scripts]
 tts-core = "tts_core.__main__:main"
-tts-core-dashboard = "tts_core.dashboard.__main__:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]

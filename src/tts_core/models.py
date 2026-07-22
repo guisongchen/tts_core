@@ -17,7 +17,7 @@ class LoadRequest(BaseModel):
 
 
 class SynthesizeRequest(BaseModel):
-    text: str
+    text: str = Field(..., min_length=1, max_length=5000)
     model_name: Optional[str] = None
     language: Optional[str] = None
     speaker: Optional[str] = "Serena"

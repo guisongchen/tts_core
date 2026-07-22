@@ -16,15 +16,9 @@ tts_core/
 │   ├── models.py      # Pydantic request/response models
 │   ├── client.py      # TTSCoreClient — Python client over Unix socket
 │   ├── tts_engine.py  # TTSEngine — wraps qwen_tts.Qwen3TTSModel
-│   ├── config.py      # Paths, defaults, and tts_core.toml loader
-│   └── dashboard/     # Web dashboard (FastAPI + Jinja2 + HTMX)
-│       ├── app.py     # Dashboard routes and API
-│       ├── systemd.py # Systemd service manager wrapper
-│       ├── static/    # HTMX, CSS, favicon
-│       └── templates/ # Jinja2 templates with HTMX partials
+│   └── config.py      # Paths, defaults, and tts_core.toml loader
 ├── services/
-│   ├── tts-core.service
-│   └── tts-core-dashboard.service
+│   └── tts-core.service
 ├── tts_core.toml      # Runtime model configuration
 └── models/            # local model directories or symlinks (gitignored)
 ```
@@ -56,28 +50,10 @@ The project expects Python 3.10+ and a CUDA-capable GPU for model inference.
 ### Via systemd
 
 ```bash
-# TTSCore daemon
 systemctl --user enable --now $PWD/services/tts-core.service
-
-# Web dashboard
-systemctl --user enable --now $PWD/services/tts-core-dashboard.service
-```
-
-### Dashboard
-
-```bash
-.venv/bin/python3 -m tts_core.dashboard
-# http://127.0.0.1:8126
-```
-
-To start the dashboard automatically on login/boot:
-
-```bash
-systemctl --user enable --now $PWD/services/tts-core-dashboard.service
 ```
 
 Socket path: `/tmp/tts_core.sock`
-Dashboard: `http://127.0.0.1:8126`
 
 ## API
 
@@ -106,7 +82,7 @@ More speakers may be available from the full model config.
 
 | Parameter | Type | Description |
 |-----------|------|-------------|
-| `text` | string (required) | Text to synthesize |
+| `text` | string (required) | Text to synthesize (max 5000 chars) |
 | `model_name` | string | Override model (loads on demand) |
 | `language` | string | `Chinese`, `English`, `Japanese`, `Korean`, `German`, `French`, `Russian`, `Portuguese`, `Spanish`, `Italian` |
 | `speaker` | string | `Vivian`, `Serena`, `Uncle_Fu` |
@@ -114,10 +90,12 @@ More speakers may be available from the full model config.
 
 ## Model resolution
 
-When loading a model, `TTSEngine` resolves the path in this order:
+Models are loaded exclusively from local directories — no network downloads are performed.
 
-1. `<model_dir>/<model_name>` if it exists, where `model_dir` is read from `tts_core.toml`
-2. Fallback HF identifier `Qwen/<model_name>` (only if not in offline mode)
+When loading a model, `TTSEngine` resolves the path:
+
+1. `<model_dir>/<model_name>` must exist as a local directory
+2. If not found, loading fails with a clear error message
 
 Configure the model directory in `tts_core.toml`:
 
@@ -126,7 +104,7 @@ Configure the model directory in `tts_core.toml`:
 model_dir = "/home/ccc/models/tts"
 ```
 
-If the config file is missing, `model_dir` defaults to `/home/ccc/models/tts`.
+If the config file is missing, `model_dir` defaults to `~/models/tts`.
 
 Place model directories there:
 
@@ -156,7 +134,10 @@ with TTSCoreClient() as client:
 
 - Model weights are configured via `tts_core.toml`; do not commit model weights.
 - The service uses `local_files_only=True` when loading models, so models must be present locally.
+- No HuggingFace downloads are performed; models must be pre-downloaded and placed in the model directory.
 - Only one model is loaded at a time; loading a different model unloads the previous one.
 - If the daemon hits `CUDA out of memory`, stop other GPU processes or unload the current model first.
-- The TTS engine depends on `qwen-tts` (not `transformers.AutoModel`), using `Qwen3TTSModel.from_pretrained()` and `generate_custom_voice()`.
-- Audio output is 24000 Hz mono WAV, written to `/tmp/tts_<timestamp>.wav` by default.
+- The TTS engine depends on `qwen-tts`, using `Qwen3TTSModel.from_pretrained()` and `generate_custom_voice()`.
+- Audio output is 24000 Hz mono WAV, written to `/tmp/tts_core_audio/`.
+- Audio files older than 1 hour are automatically cleaned up.
+- Synthesis is serialized via a lock to prevent concurrent GPU inference issues.

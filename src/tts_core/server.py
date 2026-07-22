@@ -1,4 +1,5 @@
 import argparse
+import logging
 import os
 import signal
 import socket
@@ -10,6 +11,8 @@ import uvicorn
 
 from .api import app
 from .config import HOST, PORT, SOCKET_PATH
+
+logger = logging.getLogger("tts_core")
 
 
 def _wait_for_socket(path: str, timeout: float = 5.0) -> bool:
@@ -34,18 +37,23 @@ def main():
         help=f"Listen on TCP {HOST}:{PORT} instead of Unix socket",
     )
     parser.add_argument(
-        "--detach",
+        "--wait-ready",
         action="store_true",
-        help="Detach from terminal after socket is ready",
+        help="Print a ready message once the socket is accepting connections",
     )
     args = parser.parse_args()
+
+    logging.basicConfig(
+        level=logging.INFO,
+        format="%(asctime)s %(name)s %(levelname)s %(message)s",
+    )
 
     if not args.tcp and os.path.exists(SOCKET_PATH):
         try:
             with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as s:
                 s.settimeout(0.5)
                 s.connect(SOCKET_PATH)
-            print(f"TTSCore is already running on {SOCKET_PATH}", file=sys.stderr)
+            logger.error("TTSCore is already running on %s", SOCKET_PATH)
             sys.exit(1)
         except (OSError, ConnectionRefusedError):
             os.unlink(SOCKET_PATH)
@@ -60,28 +68,28 @@ def main():
     server = uvicorn.Server(config)
 
     def handle_signal(signum, frame):
-        print(f"\nReceived signal {signum}, shutting down...")
+        logger.info("Received signal %s, shutting down...", signum)
         server.should_exit = True
 
     signal.signal(signal.SIGTERM, handle_signal)
     signal.signal(signal.SIGINT, handle_signal)
 
     try:
-        if args.detach:
-            ready = threading.Event()
-
-            def wait_and_exit():
-                ok = _wait_for_socket(SOCKET_PATH, timeout=10.0) if not args.tcp else True
+        if args.wait_ready:
+            def notify_ready():
+                if args.tcp:
+                    logger.info("TTSCore daemon ready (TCP mode)")
+                    return
+                ok = _wait_for_socket(SOCKET_PATH, timeout=10.0)
                 if ok:
-                    print("TTSCore daemon ready")
+                    logger.info("TTSCore daemon ready")
                 else:
-                    print("TTSCore daemon failed to start within timeout")
+                    logger.error("TTSCore daemon failed to start within timeout")
                     os._exit(1)
 
-            threading.Thread(target=wait_and_exit, daemon=True).start()
-            server.run()
-        else:
-            server.run()
+            threading.Thread(target=notify_ready, daemon=True).start()
+
+        server.run()
     finally:
         if not args.tcp:
             try:

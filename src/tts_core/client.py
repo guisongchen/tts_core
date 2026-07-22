@@ -1,13 +1,16 @@
+import logging
 import os
+import shutil
 import socket
 import subprocess
 import sys
 import time
-from pathlib import Path
 
 import httpx
 
 from .config import MODEL_SIZE_DEFAULT, SOCKET_PATH
+
+logger = logging.getLogger("tts_core")
 
 
 class TTSCoreClient:
@@ -37,13 +40,15 @@ class TTSCoreClient:
         self._spawn_daemon()
 
     def _spawn_daemon(self):
-        project_root = Path(__file__).parent.parent.parent
-        python = project_root / ".venv" / "bin" / "python3"
-        if not python.exists():
-            python = Path(sys.executable)
+        # Find the python interpreter that has tts_core installed.
+        # Prefer the venv python next to this package, fall back to current.
+        python = shutil.which("python3")
+        if python is None:
+            python = sys.executable
+
+        logger.info("Starting TTSCore daemon with %s ...", python)
         subprocess.Popen(
-            [str(python), "-m", "tts_core", "--detach"],
-            cwd=str(project_root),
+            [python, "-m", "tts_core", "--wait-ready"],
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL,
             start_new_session=True,
@@ -78,7 +83,7 @@ class TTSCoreClient:
         self, text: str, model_name: str = None, language: str = None,
         speaker: str = None, instruct: str = None,
     ) -> dict:
-        payload = {"text": text}
+        payload: dict = {"text": text}
         if model_name:
             payload["model_name"] = model_name
         if language:

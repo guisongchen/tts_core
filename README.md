@@ -25,29 +25,8 @@ curl --noproxy '*' --unix-socket /tmp/tts_core.sock -X POST -H "Content-Type: ap
 ## systemd
 
 ```bash
-# TTSCore daemon
 systemctl --user enable --now $PWD/services/tts-core.service
-
-# Web dashboard
-systemctl --user enable --now $PWD/services/tts-core-dashboard.service
 ```
-
-## Dashboard
-
-TTSCore includes a web dashboard for monitoring model status, GPU memory, request stats, and testing synthesis.
-
-```bash
-python -m tts_core.dashboard
-# Opens at http://127.0.0.1:8126
-```
-
-To start the dashboard automatically on login/boot, use the `tts-core-dashboard.service` unit shown above.
-
-Features:
-- Model load/unload with real-time status and GPU memory display
-- Interactive synthesis test: input text, select language/speaker/instruct, play result
-- Request statistics and system resource monitoring
-- Service management (start/stop/restart) and log viewer
 
 ## API
 
@@ -64,7 +43,7 @@ Features:
 
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
-| `text` | string | required | Text to synthesize |
+| `text` | string | required | Text to synthesize (max 5000 chars) |
 | `model_name` | string | default model | Model name (loads on demand if different) |
 | `language` | string | — | e.g. `Chinese`, `English`, `Japanese`, `Korean` |
 | `speaker` | string | — | `Vivian`, `Serena`, or `Uncle_Fu` |
@@ -85,4 +64,10 @@ Place model directories there:
 mv /path/to/Qwen3-TTS-12Hz-0.6B-CustomVoice /home/ccc/models/tts/Qwen3-TTS-12Hz-0.6B-CustomVoice
 ```
 
-If `tts_core.toml` is missing, the default model directory is `/home/ccc/models/tts`.
+If `tts_core.toml` is missing, the default model directory is `~/models/tts`.
+
+Models are loaded exclusively from local directories. No network downloads are performed.
+
+## Audio output
+
+Synthesized audio is written to `/tmp/tts_core_audio/` as WAV files (24 kHz mono). Files older than 1 hour are automatically cleaned up on each synthesis request.
